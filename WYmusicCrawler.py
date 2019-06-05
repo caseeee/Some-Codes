@@ -10,6 +10,7 @@ headers = {
         'Referer': 'https://music.163.com/',
     }
 
+
 @retry(wait_random_min=1000, wait_random_max=2000)
 def get_html(url):
     """获取页面内容"""
@@ -20,6 +21,7 @@ def get_html(url):
         return soup
     except ConnectionError:
         print("请求超时")
+
 
 def get_song():
     """获取歌单"""
@@ -36,17 +38,18 @@ def get_song():
             song_list.append(song)  # 把歌单添加到songs列表中
         else:
             continue
-
+    # 创建一个文件夹，用来放后续下载的音乐
+    os.mkdir("./music/")
     # 通过歌单页面来获取歌曲并且下载
     for j in song_list:
         url = "https://music.163.com" + j
         # 获取歌单名称
         song_list_name = get_html(url).find('title').string
-        #　创建歌单目录
+        # 创建歌单目录
         try:
-            os.mkdir("./" + song_list_name)
+            os.mkdir("./music/" + song_list_name)
         except FileExistsError or FileNotFoundError:
-            continue
+            pass
         songs = get_html(url).findAll('a', {"href": re.compile(r"\/song\?id=\d+?")})
         for k in songs:
             song_name = k.string  # 获取歌曲的名字
@@ -56,10 +59,10 @@ def get_song():
             # 获取下载的内容
             download_songs = requests.get(download_url, headers=headers).content
             try:
-                with open('./' + song_list_name + "/" + song_name + '.mp3', 'wb') as file:
+                with open('./music/' + song_list_name + "/" + song_name + '.mp3', 'wb') as file:
                     file.write(download_songs)
             except FileExistsError or FileNotFoundError:
-                continue
+                pass
 
     print('Done!')
 
